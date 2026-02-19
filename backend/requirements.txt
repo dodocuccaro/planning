@@ -1,0 +1,7 @@
+flask==3.1.0
+flask-cors==5.0.0
+pandas==2.2.3
+openpyxl==3.1.5
+openai==1.61.0
+python-dotenv==1.0.1
+numpy==2.2.2
