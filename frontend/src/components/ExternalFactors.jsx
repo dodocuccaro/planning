@@ -16,7 +16,7 @@ export default function ExternalFactors({ onNext, onBack, uploadedData, onResult
   const [error, setError]     = useState(null)
 
   const handleChipClick = (chip) => {
-    const text = chip.replace(/^[\S]+ /, '') // strip emoji prefix
+    const text = chip.replace(/^.+?\s/, '') // strip emoji prefix (handles multi-byte emojis)
     setFactors(prev => prev ? `${prev}\n${text}` : text)
   }
 

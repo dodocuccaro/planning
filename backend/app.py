@@ -146,11 +146,17 @@ def upload_file():
         contents = file.read()
         df = pd.read_excel(io.BytesIO(contents), sheet_name="Planning Template")
     except Exception:
-        # Try reading first sheet if named sheet not found
+        # Try reading first sheet if the named sheet is not found
         try:
             df = pd.read_excel(io.BytesIO(contents))
         except Exception as exc:
-            return jsonify({"error": f"Could not read Excel file: {str(exc)}"}), 422
+            return jsonify({
+                "error": (
+                    f"Could not read Excel file: {str(exc)}. "
+                    "Make sure the file contains a sheet named 'Planning Template' "
+                    "(as in the downloaded template)."
+                )
+            }), 422
 
     # Validate required columns (case-insensitive)
     df.columns = [str(c).strip() for c in df.columns]
