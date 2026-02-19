@@ -1,24 +1,13 @@
-import axios from 'axios'
+const TEMPLATE_URL = `${import.meta.env.BASE_URL}planning_template.xlsx`
 
 export default function TemplateDownload({ onNext }) {
-  const handleDownload = async () => {
-    try {
-      const response = await axios.get('/api/template', { responseType: 'blob' })
-      const url = window.URL.createObjectURL(new Blob([response.data]))
-      const link = document.createElement('a')
-      link.href = url
-      // Try to get filename from Content-Disposition header
-      const cd = response.headers['content-disposition']
-      const match = cd && cd.match(/filename="?([^";\n]+)"?/)
-      link.download = match ? match[1] : 'planning_template.xlsx'
-      document.body.appendChild(link)
-      link.click()
-      link.remove()
-      window.URL.revokeObjectURL(url)
-    } catch (err) {
-      console.error('Download failed:', err)
-      alert('Failed to download template. Is the backend running on port 5000?')
-    }
+  const handleDownload = () => {
+    const link = document.createElement('a')
+    link.href = TEMPLATE_URL
+    link.download = 'planning_template.xlsx'
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
   }
 
   return (

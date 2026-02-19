@@ -1,7 +1,16 @@
 import { useState, useRef, useCallback } from 'react'
-import axios from 'axios'
+import readXlsxFile from 'read-excel-file'
 
 const PREVIEW_LIMIT = 10
+
+const REQUIRED_COLUMNS = [
+  'Product Code',
+  'Product Name',
+  'Year',
+  'Opening Stock',
+  'Quantity Purchased',
+  'Closing Stock',
+]
 
 export default function FileUpload({ onNext, onBack, onDataLoaded }) {
   const [dragOver, setDragOver]   = useState(false)
@@ -16,20 +25,62 @@ export default function FileUpload({ onNext, onBack, onDataLoaded }) {
     setLoading(true)
     setParsedData(null)
 
-    const formData = new FormData()
-    formData.append('file', file)
-
     try {
-      const res = await axios.post('/api/upload', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
-      })
-      const data = res.data
+      // Try "Planning Template" sheet first, fall back to first sheet
+      let rows
+      try {
+        rows = await readXlsxFile(file, { sheet: 'Planning Template' })
+      } catch {
+        rows = await readXlsxFile(file)
+      }
+
+      if (!rows || rows.length < 2) {
+        throw new Error('The uploaded file contains no data rows.')
+      }
+
+      // First row = headers
+      const headers = rows[0].map(h => (h == null ? '' : String(h).trim()))
+      const missing = REQUIRED_COLUMNS.filter(col => !headers.includes(col))
+      if (missing.length > 0) {
+        throw new Error(`Missing required columns: ${missing.join(', ')}. Expected: ${REQUIRED_COLUMNS.join(', ')}`)
+      }
+
+      // Map column positions
+      const idx = {}
+      for (const col of REQUIRED_COLUMNS) idx[col] = headers.indexOf(col)
+
+      // Parse data rows (skip header)
+      const parsedRows = []
+      for (let i = 1; i < rows.length; i++) {
+        const row = rows[i]
+        // Skip fully empty rows
+        if (row.every(cell => cell == null || cell === '')) continue
+        parsedRows.push({
+          product_code: String(row[idx['Product Code']] ?? '').trim(),
+          product_name: String(row[idx['Product Name']] ?? '').trim(),
+          year: Number(row[idx['Year']]) || 0,
+          opening_stock: Number(row[idx['Opening Stock']]) || 0,
+          quantity_purchased: Number(row[idx['Quantity Purchased']]) || 0,
+          closing_stock: Number(row[idx['Closing Stock']]) || 0,
+        })
+      }
+
+      if (parsedRows.length === 0) {
+        throw new Error('The uploaded file contains no data rows.')
+      }
+
+      const productCodes = [...new Set(parsedRows.map(r => r.product_code))]
+      const data = {
+        rows: parsedRows,
+        row_count: parsedRows.length,
+        product_count: productCodes.length,
+        columns: REQUIRED_COLUMNS,
+      }
       setParsedData(data)
       onDataLoaded(data.rows)
       setFileName(file.name)
     } catch (err) {
-      const msg = err.response?.data?.error || 'Upload failed. Please check the file and try again.'
-      setError(msg)
+      setError(err.message || 'Upload failed. Please check the file and try again.')
     } finally {
       setLoading(false)
     }
