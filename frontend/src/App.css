@@ -669,6 +669,7 @@ tbody td {
 .product-name-block {}
 .product-name { font-size: 1.1rem; font-weight: 700; }
 .product-code { font-size: .8rem; opacity: .75; margin-top: 2px; }
+.channel-badge { margin-left: 10px; color: var(--blue-500); font-weight: 500; opacity: 1; }
 
 .product-rec {
   text-align: right;

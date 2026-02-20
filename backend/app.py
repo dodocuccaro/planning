@@ -25,19 +25,28 @@ REQUIRED_COLUMNS = [
     "Closing Stock",
 ]
 
+# Optional column included in the template but not required for upload
+OPTIONAL_COLUMNS = ["Sales Channel"]
+
+# All columns that appear in the template (required + optional)
+TEMPLATE_COLUMNS = REQUIRED_COLUMNS + OPTIONAL_COLUMNS
+
 SAMPLE_DATA = [
-    # Product A — Ski Jacket
-    {"Product Code": "SKI-JKT-001", "Product Name": "Ski Jacket Pro", "Year": 2022, "Opening Stock": 50, "Quantity Purchased": 300, "Closing Stock": 40},
-    {"Product Code": "SKI-JKT-001", "Product Name": "Ski Jacket Pro", "Year": 2023, "Opening Stock": 40, "Quantity Purchased": 320, "Closing Stock": 35},
-    {"Product Code": "SKI-JKT-001", "Product Name": "Ski Jacket Pro", "Year": 2024, "Opening Stock": 35, "Quantity Purchased": 350, "Closing Stock": 30},
+    # Product A — Ski Jacket (two channels)
+    {"Product Code": "SKI-JKT-001", "Product Name": "Ski Jacket Pro", "Sales Channel": "Main Store", "Year": 2022, "Opening Stock": 50, "Quantity Purchased": 300, "Closing Stock": 40},
+    {"Product Code": "SKI-JKT-001", "Product Name": "Ski Jacket Pro", "Sales Channel": "Main Store", "Year": 2023, "Opening Stock": 40, "Quantity Purchased": 320, "Closing Stock": 35},
+    {"Product Code": "SKI-JKT-001", "Product Name": "Ski Jacket Pro", "Sales Channel": "Main Store", "Year": 2024, "Opening Stock": 35, "Quantity Purchased": 350, "Closing Stock": 30},
+    {"Product Code": "SKI-JKT-001", "Product Name": "Ski Jacket Pro", "Sales Channel": "Online",     "Year": 2022, "Opening Stock": 10, "Quantity Purchased":  80, "Closing Stock":  8},
+    {"Product Code": "SKI-JKT-001", "Product Name": "Ski Jacket Pro", "Sales Channel": "Online",     "Year": 2023, "Opening Stock":  8, "Quantity Purchased": 100, "Closing Stock":  6},
+    {"Product Code": "SKI-JKT-001", "Product Name": "Ski Jacket Pro", "Sales Channel": "Online",     "Year": 2024, "Opening Stock":  6, "Quantity Purchased": 130, "Closing Stock":  5},
     # Product B — Ski Boots
-    {"Product Code": "SKI-BT-002",  "Product Name": "Alpine Ski Boots", "Year": 2022, "Opening Stock": 80, "Quantity Purchased": 200, "Closing Stock": 60},
-    {"Product Code": "SKI-BT-002",  "Product Name": "Alpine Ski Boots", "Year": 2023, "Opening Stock": 60, "Quantity Purchased": 210, "Closing Stock": 50},
-    {"Product Code": "SKI-BT-002",  "Product Name": "Alpine Ski Boots", "Year": 2024, "Opening Stock": 50, "Quantity Purchased": 230, "Closing Stock": 45},
+    {"Product Code": "SKI-BT-002",  "Product Name": "Alpine Ski Boots", "Sales Channel": "Main Store", "Year": 2022, "Opening Stock": 80, "Quantity Purchased": 200, "Closing Stock": 60},
+    {"Product Code": "SKI-BT-002",  "Product Name": "Alpine Ski Boots", "Sales Channel": "Main Store", "Year": 2023, "Opening Stock": 60, "Quantity Purchased": 210, "Closing Stock": 50},
+    {"Product Code": "SKI-BT-002",  "Product Name": "Alpine Ski Boots", "Sales Channel": "Main Store", "Year": 2024, "Opening Stock": 50, "Quantity Purchased": 230, "Closing Stock": 45},
     # Product C — Thermal Gloves
-    {"Product Code": "GLOVES-003",  "Product Name": "Thermal Gloves",   "Year": 2022, "Opening Stock": 120, "Quantity Purchased": 500, "Closing Stock": 80},
-    {"Product Code": "GLOVES-003",  "Product Name": "Thermal Gloves",   "Year": 2023, "Opening Stock": 80,  "Quantity Purchased": 540, "Closing Stock": 70},
-    {"Product Code": "GLOVES-003",  "Product Name": "Thermal Gloves",   "Year": 2024, "Opening Stock": 70,  "Quantity Purchased": 580, "Closing Stock": 60},
+    {"Product Code": "GLOVES-003",  "Product Name": "Thermal Gloves",   "Sales Channel": "Main Store", "Year": 2022, "Opening Stock": 120, "Quantity Purchased": 500, "Closing Stock": 80},
+    {"Product Code": "GLOVES-003",  "Product Name": "Thermal Gloves",   "Sales Channel": "Main Store", "Year": 2023, "Opening Stock": 80,  "Quantity Purchased": 540, "Closing Stock": 70},
+    {"Product Code": "GLOVES-003",  "Product Name": "Thermal Gloves",   "Sales Channel": "Main Store", "Year": 2024, "Opening Stock": 70,  "Quantity Purchased": 580, "Closing Stock": 60},
 ]
 
 
@@ -55,10 +64,10 @@ def _build_template_excel() -> bytes:
     thin = Side(style="thin", color="CCCCCC")
     border = Border(left=thin, right=thin, top=thin, bottom=thin)
 
-    col_widths = [18, 22, 8, 16, 20, 16]
+    col_widths = [18, 22, 8, 16, 20, 16, 18]
 
     # Header row
-    for col_idx, (col_name, width) in enumerate(zip(REQUIRED_COLUMNS, col_widths), start=1):
+    for col_idx, (col_name, width) in enumerate(zip(TEMPLATE_COLUMNS, col_widths), start=1):
         cell = ws.cell(row=1, column=col_idx, value=col_name)
         cell.font = header_font
         cell.fill = header_fill
@@ -70,8 +79,8 @@ def _build_template_excel() -> bytes:
 
     # Sample data rows
     for row_idx, row_data in enumerate(SAMPLE_DATA, start=2):
-        for col_idx, col_name in enumerate(REQUIRED_COLUMNS, start=1):
-            cell = ws.cell(row=row_idx, column=col_idx, value=row_data[col_name])
+        for col_idx, col_name in enumerate(TEMPLATE_COLUMNS, start=1):
+            cell = ws.cell(row=row_idx, column=col_idx, value=row_data.get(col_name, ""))
             cell.fill = example_fill
             cell.border = border
             cell.alignment = center
@@ -83,7 +92,7 @@ def _build_template_excel() -> bytes:
         ("", False),
         ("1. Do NOT rename or remove any column headers in the 'Planning Template' sheet.", False),
         ("2. You may delete the example rows (rows 2 onwards) and enter your own data.", False),
-        ("3. Each row represents ONE product for ONE year.", False),
+        ("3. Each row represents ONE product for ONE year (and optionally one sales channel).", False),
         ("4. Required columns:", False),
         ("   • Product Code  — unique identifier (e.g. SKI-JKT-001)", False),
         ("   • Product Name  — human-readable name", False),
@@ -91,8 +100,12 @@ def _build_template_excel() -> bytes:
         ("   • Opening Stock — units in stock at the START of the year", False),
         ("   • Quantity Purchased — units purchased/ordered that year", False),
         ("   • Closing Stock — units remaining at the END of the year", False),
-        ("5. Sales are calculated automatically: Opening Stock + Quantity Purchased - Closing Stock", False),
-        ("6. Include at least 2-3 years of data per product for better forecasts.", False),
+        ("5. Optional column:", False),
+        ("   • Sales Channel — shop name or channel (e.g. 'Main Store', 'Online'). Leave blank if you only have one channel.", False),
+        ("   When provided, the AI will produce separate recommendations per channel and analyse", False),
+        ("   which external factors affect each channel most.", False),
+        ("6. Sales are calculated automatically: Opening Stock + Quantity Purchased - Closing Stock", False),
+        ("7. Include at least 2-3 years of data per product for better forecasts.", False),
     ]
     ws_info.column_dimensions["A"].width = 80
     for r_idx, (text, bold) in enumerate(instructions, start=1):
@@ -182,21 +195,27 @@ def upload_file():
 
     # Build JSON-serialisable list
     rows = []
+    has_channel = "Sales Channel" in df.columns
+    if has_channel:
+        df["Sales Channel"] = df["Sales Channel"].fillna("").astype(str).str.strip()
     for _, row in df.iterrows():
-        rows.append({
+        entry = {
             "product_code": row["Product Code"],
             "product_name": row["Product Name"],
             "year": int(row["Year"]),
             "opening_stock": float(row["Opening Stock"]),
             "quantity_purchased": float(row["Quantity Purchased"]),
             "closing_stock": float(row["Closing Stock"]),
-        })
+        }
+        if has_channel:
+            entry["sales_channel"] = row["Sales Channel"]
+        rows.append(entry)
 
     return jsonify({
         "rows": rows,
         "row_count": len(rows),
         "product_count": df["Product Code"].nunique(),
-        "columns": REQUIRED_COLUMNS,
+        "columns": REQUIRED_COLUMNS + (["Sales Channel"] if has_channel else []),
     })
 
 

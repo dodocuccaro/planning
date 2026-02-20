@@ -45,7 +45,7 @@ function SalesChart({ years, sales }) {
 
 function ProductCard({ product }) {
   const {
-    product_code, product_name, years, historical_sales,
+    product_code, product_name, sales_channel, years, historical_sales,
     avg_sales, trend_pct, adjustment_factor, recommended_purchase, ai_reasoning,
   } = product
 
@@ -54,7 +54,10 @@ function ProductCard({ product }) {
       <div className="product-card-header">
         <div className="product-name-block">
           <div className="product-name">{product_name}</div>
-          <div className="product-code">Code: {product_code}</div>
+          <div className="product-code">
+            Code: {product_code}
+            {sales_channel ? <span className="channel-badge">🏪 {sales_channel}</span> : null}
+          </div>
         </div>
         <div className="product-rec">
           <div className="rec-label">Recommended Order</div>
@@ -170,7 +173,7 @@ export default function Results({ results, onBack, onRestart }) {
       {/* Per-product cards */}
       <div className="product-cards">
         {products.map((p) => (
-          <ProductCard key={p.product_code} product={p} />
+          <ProductCard key={`${p.product_code}|||${p.sales_channel || ''}`} product={p} />
         ))}
       </div>
 

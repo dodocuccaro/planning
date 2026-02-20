@@ -12,19 +12,21 @@ const REQUIRED_COLUMNS = [
   'Closing Stock',
 ]
 
+const OPTIONAL_COLUMNS = ['Sales Channel']
+
 const DEMO_ROWS = [
-  { product_code: 'SKI-001', product_name: 'Alpine Ski Set', year: 2021, opening_stock: 120, quantity_purchased: 280, closing_stock: 95 },
-  { product_code: 'SKI-001', product_name: 'Alpine Ski Set', year: 2022, opening_stock: 95,  quantity_purchased: 310, closing_stock: 80 },
-  { product_code: 'SKI-001', product_name: 'Alpine Ski Set', year: 2023, opening_stock: 80,  quantity_purchased: 340, closing_stock: 70 },
-  { product_code: 'BOT-002', product_name: 'Ski Boots Pro', year: 2021, opening_stock: 200, quantity_purchased: 150, closing_stock: 110 },
-  { product_code: 'BOT-002', product_name: 'Ski Boots Pro', year: 2022, opening_stock: 110, quantity_purchased: 180, closing_stock: 90  },
-  { product_code: 'BOT-002', product_name: 'Ski Boots Pro', year: 2023, opening_stock: 90,  quantity_purchased: 210, closing_stock: 75  },
-  { product_code: 'HLM-003', product_name: 'Safety Helmet', year: 2021, opening_stock: 300, quantity_purchased: 220, closing_stock: 180 },
-  { product_code: 'HLM-003', product_name: 'Safety Helmet', year: 2022, opening_stock: 180, quantity_purchased: 260, closing_stock: 150 },
-  { product_code: 'HLM-003', product_name: 'Safety Helmet', year: 2023, opening_stock: 150, quantity_purchased: 300, closing_stock: 120 },
-  { product_code: 'GGL-004', product_name: 'Ski Goggles',   year: 2021, opening_stock: 400, quantity_purchased: 350, closing_stock: 260 },
-  { product_code: 'GGL-004', product_name: 'Ski Goggles',   year: 2022, opening_stock: 260, quantity_purchased: 410, closing_stock: 220 },
-  { product_code: 'GGL-004', product_name: 'Ski Goggles',   year: 2023, opening_stock: 220, quantity_purchased: 460, closing_stock: 190 },
+  { product_code: 'SKI-001', product_name: 'Alpine Ski Set', sales_channel: 'Main Store', year: 2021, opening_stock: 120, quantity_purchased: 280, closing_stock: 95 },
+  { product_code: 'SKI-001', product_name: 'Alpine Ski Set', sales_channel: 'Main Store', year: 2022, opening_stock: 95,  quantity_purchased: 310, closing_stock: 80 },
+  { product_code: 'SKI-001', product_name: 'Alpine Ski Set', sales_channel: 'Main Store', year: 2023, opening_stock: 80,  quantity_purchased: 340, closing_stock: 70 },
+  { product_code: 'SKI-001', product_name: 'Alpine Ski Set', sales_channel: 'Online',     year: 2021, opening_stock: 20,  quantity_purchased:  60, closing_stock: 15 },
+  { product_code: 'SKI-001', product_name: 'Alpine Ski Set', sales_channel: 'Online',     year: 2022, opening_stock: 15,  quantity_purchased:  80, closing_stock: 10 },
+  { product_code: 'SKI-001', product_name: 'Alpine Ski Set', sales_channel: 'Online',     year: 2023, opening_stock: 10,  quantity_purchased: 110, closing_stock:  8 },
+  { product_code: 'BOT-002', product_name: 'Ski Boots Pro', sales_channel: 'Main Store', year: 2021, opening_stock: 200, quantity_purchased: 150, closing_stock: 110 },
+  { product_code: 'BOT-002', product_name: 'Ski Boots Pro', sales_channel: 'Main Store', year: 2022, opening_stock: 110, quantity_purchased: 180, closing_stock: 90  },
+  { product_code: 'BOT-002', product_name: 'Ski Boots Pro', sales_channel: 'Main Store', year: 2023, opening_stock: 90,  quantity_purchased: 210, closing_stock: 75  },
+  { product_code: 'HLM-003', product_name: 'Safety Helmet', sales_channel: 'Main Store', year: 2021, opening_stock: 300, quantity_purchased: 220, closing_stock: 180 },
+  { product_code: 'HLM-003', product_name: 'Safety Helmet', sales_channel: 'Main Store', year: 2022, opening_stock: 180, quantity_purchased: 260, closing_stock: 150 },
+  { product_code: 'HLM-003', product_name: 'Safety Helmet', sales_channel: 'Main Store', year: 2023, opening_stock: 150, quantity_purchased: 300, closing_stock: 120 },
 ]
 
 export default function FileUpload({ onNext, onBack, onDataLoaded }) {
@@ -60,9 +62,11 @@ export default function FileUpload({ onNext, onBack, onDataLoaded }) {
         throw new Error(`Missing required columns: ${missing.join(', ')}. Expected: ${REQUIRED_COLUMNS.join(', ')}`)
       }
 
-      // Map column positions
+      // Map column positions (required + optional)
       const idx = {}
       for (const col of REQUIRED_COLUMNS) idx[col] = headers.indexOf(col)
+      const hasChannel = headers.includes('Sales Channel')
+      if (hasChannel) idx['Sales Channel'] = headers.indexOf('Sales Channel')
 
       // Parse data rows (skip header)
       const parsedRows = []
@@ -70,14 +74,18 @@ export default function FileUpload({ onNext, onBack, onDataLoaded }) {
         const row = rows[i]
         // Skip fully empty rows
         if (row.every(cell => cell == null || cell === '')) continue
-        parsedRows.push({
+        const entry = {
           product_code: String(row[idx['Product Code']] ?? '').trim(),
           product_name: String(row[idx['Product Name']] ?? '').trim(),
           year: Number(row[idx['Year']]) || 0,
           opening_stock: Number(row[idx['Opening Stock']]) || 0,
           quantity_purchased: Number(row[idx['Quantity Purchased']]) || 0,
           closing_stock: Number(row[idx['Closing Stock']]) || 0,
-        })
+        }
+        if (hasChannel) {
+          entry.sales_channel = String(row[idx['Sales Channel']] ?? '').trim()
+        }
+        parsedRows.push(entry)
       }
 
       if (parsedRows.length === 0) {
@@ -89,7 +97,8 @@ export default function FileUpload({ onNext, onBack, onDataLoaded }) {
         rows: parsedRows,
         row_count: parsedRows.length,
         product_count: productCodes.length,
-        columns: REQUIRED_COLUMNS,
+        columns: REQUIRED_COLUMNS.concat(hasChannel ? OPTIONAL_COLUMNS : []),
+        hasChannel,
       }
       setParsedData(data)
       onDataLoaded(data.rows)
@@ -120,7 +129,8 @@ export default function FileUpload({ onNext, onBack, onDataLoaded }) {
       rows: DEMO_ROWS,
       row_count: DEMO_ROWS.length,
       product_count: productCodes.length,
-      columns: REQUIRED_COLUMNS,
+      columns: REQUIRED_COLUMNS.concat(OPTIONAL_COLUMNS),
+      hasChannel: true,
       isDemo: true,
     }
     setParsedData(data)
@@ -128,16 +138,20 @@ export default function FileUpload({ onNext, onBack, onDataLoaded }) {
     setFileName('demo-data')
   }, [onDataLoaded])
 
-  const columns = ['product_code', 'product_name', 'year', 'opening_stock', 'quantity_purchased', 'closing_stock']
+  const columns = ['product_code', 'product_name', 'sales_channel', 'year', 'opening_stock', 'quantity_purchased', 'closing_stock']
   const columnLabels = {
     product_code: 'Product Code',
     product_name: 'Product Name',
+    sales_channel: 'Sales Channel',
     year: 'Year',
     opening_stock: 'Opening Stock',
     quantity_purchased: 'Qty Purchased',
     closing_stock: 'Closing Stock',
   }
 
+  const visibleColumns = parsedData?.hasChannel
+    ? columns
+    : columns.filter(c => c !== 'sales_channel')
   const previewRows = parsedData?.rows?.slice(0, PREVIEW_LIMIT) || []
   const hasMore = (parsedData?.rows?.length || 0) > PREVIEW_LIMIT
 
@@ -224,13 +238,16 @@ export default function FileUpload({ onNext, onBack, onDataLoaded }) {
         <div className="preview-section">
           <div className="preview-header">
             <h3>Data Preview</h3>
-            <span className="badge">{parsedData.row_count} rows · {parsedData.product_count} products</span>
+            <span className="badge">
+              {parsedData.row_count} rows · {parsedData.product_count} products
+              {parsedData.hasChannel ? ` · ${[...new Set(parsedData.rows.map(r => r.sales_channel).filter(Boolean))].length} channels` : ''}
+            </span>
           </div>
           <div className="table-wrapper">
             <table>
               <thead>
                 <tr>
-                  {columns.map(col => (
+                  {visibleColumns.map(col => (
                     <th key={col}>{columnLabels[col]}</th>
                   ))}
                 </tr>
@@ -238,7 +255,7 @@ export default function FileUpload({ onNext, onBack, onDataLoaded }) {
               <tbody>
                 {previewRows.map((row, i) => (
                   <tr key={i}>
-                    {columns.map(col => (
+                    {visibleColumns.map(col => (
                       <td key={col}>{row[col] ?? '—'}</td>
                     ))}
                   </tr>
