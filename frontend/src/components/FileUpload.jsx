@@ -12,6 +12,21 @@ const REQUIRED_COLUMNS = [
   'Closing Stock',
 ]
 
+const DEMO_ROWS = [
+  { product_code: 'SKI-001', product_name: 'Alpine Ski Set', year: 2021, opening_stock: 120, quantity_purchased: 280, closing_stock: 95 },
+  { product_code: 'SKI-001', product_name: 'Alpine Ski Set', year: 2022, opening_stock: 95,  quantity_purchased: 310, closing_stock: 80 },
+  { product_code: 'SKI-001', product_name: 'Alpine Ski Set', year: 2023, opening_stock: 80,  quantity_purchased: 340, closing_stock: 70 },
+  { product_code: 'BOT-002', product_name: 'Ski Boots Pro', year: 2021, opening_stock: 200, quantity_purchased: 150, closing_stock: 110 },
+  { product_code: 'BOT-002', product_name: 'Ski Boots Pro', year: 2022, opening_stock: 110, quantity_purchased: 180, closing_stock: 90  },
+  { product_code: 'BOT-002', product_name: 'Ski Boots Pro', year: 2023, opening_stock: 90,  quantity_purchased: 210, closing_stock: 75  },
+  { product_code: 'HLM-003', product_name: 'Safety Helmet', year: 2021, opening_stock: 300, quantity_purchased: 220, closing_stock: 180 },
+  { product_code: 'HLM-003', product_name: 'Safety Helmet', year: 2022, opening_stock: 180, quantity_purchased: 260, closing_stock: 150 },
+  { product_code: 'HLM-003', product_name: 'Safety Helmet', year: 2023, opening_stock: 150, quantity_purchased: 300, closing_stock: 120 },
+  { product_code: 'GGL-004', product_name: 'Ski Goggles',   year: 2021, opening_stock: 400, quantity_purchased: 350, closing_stock: 260 },
+  { product_code: 'GGL-004', product_name: 'Ski Goggles',   year: 2022, opening_stock: 260, quantity_purchased: 410, closing_stock: 220 },
+  { product_code: 'GGL-004', product_name: 'Ski Goggles',   year: 2023, opening_stock: 220, quantity_purchased: 460, closing_stock: 190 },
+]
+
 export default function FileUpload({ onNext, onBack, onDataLoaded }) {
   const [dragOver, setDragOver]   = useState(false)
   const [loading, setLoading]     = useState(false)
@@ -98,6 +113,21 @@ export default function FileUpload({ onNext, onBack, onDataLoaded }) {
     if (file) uploadFile(file)
   }
 
+  const handleDemoData = useCallback(() => {
+    setError(null)
+    const productCodes = [...new Set(DEMO_ROWS.map(r => r.product_code))]
+    const data = {
+      rows: DEMO_ROWS,
+      row_count: DEMO_ROWS.length,
+      product_count: productCodes.length,
+      columns: REQUIRED_COLUMNS,
+      isDemo: true,
+    }
+    setParsedData(data)
+    onDataLoaded(data.rows)
+    setFileName('demo-data')
+  }, [onDataLoaded])
+
   const columns = ['product_code', 'product_name', 'year', 'opening_stock', 'quantity_purchased', 'closing_stock']
   const columnLabels = {
     product_code: 'Product Code',
@@ -154,11 +184,30 @@ export default function FileUpload({ onNext, onBack, onDataLoaded }) {
         )}
       </div>
 
+      {/* Demo data shortcut */}
+      {!parsedData && !loading && (
+        <div style={{ textAlign: 'center', marginTop: 16 }}>
+          <span style={{ color: 'var(--gray-500)', fontSize: '.85rem', marginRight: 8 }}>— or —</span>
+          <button
+            className="btn btn-secondary"
+            type="button"
+            onClick={handleDemoData}
+          >
+            🎯 Try with Demo Data
+          </button>
+        </div>
+      )}
+
       {/* File accepted confirmation */}
       {fileName && !loading && !error && (
         <div className="file-accepted">
           <span>✅</span>
-          <span><strong>{fileName}</strong> — {parsedData?.row_count} rows, {parsedData?.product_count} products loaded</span>
+          <span>
+            {parsedData?.isDemo
+              ? <>Demo data loaded — <strong>{parsedData.row_count}</strong> rows, <strong>{parsedData.product_count}</strong> products</>
+              : <><strong>{fileName}</strong> — {parsedData?.row_count} rows, {parsedData?.product_count} products loaded</>
+            }
+          </span>
         </div>
       )}
 
