@@ -17,30 +17,32 @@ function linearRegressionSlope(yValues) {
 /**
  * Analyse uploaded rows and return purchase recommendations.
  *
- * @param {Array<{product_code,product_name,year,opening_stock,quantity_purchased,closing_stock}>} data
+ * @param {Array<{product_code,product_name,year,opening_stock,quantity_purchased,closing_stock,sales_channel?}>} data
  * @param {string} externalFactors
  * @returns {{ products: Array, ai_adjustment: object, external_factors: string }}
  */
 export function analyze(data, externalFactors) {
-  // Group rows by product code
+  // Group rows by (product_code, sales_channel)
   const productMap = {}
   for (const row of data) {
     const code = String(row.product_code)
-    if (!productMap[code]) {
-      productMap[code] = { product_code: code, product_name: String(row.product_name), rows: [] }
+    const channel = String(row.sales_channel || '').trim()
+    const key = `${code}|||${channel}`
+    if (!productMap[key]) {
+      productMap[key] = { product_code: code, product_name: String(row.product_name), channel, rows: [] }
     }
-    productMap[code].rows.push(row)
+    productMap[key].rows.push(row)
   }
 
   // Sort each product's rows by year
-  for (const code of Object.keys(productMap)) {
-    productMap[code].rows.sort((a, b) => Number(a.year) - Number(b.year))
+  for (const key of Object.keys(productMap)) {
+    productMap[key].rows.sort((a, b) => Number(a.year) - Number(b.year))
   }
 
-  // Compute statistics per product
+  // Compute statistics per product+channel
   const productsSummary = []
-  for (const code of Object.keys(productMap)) {
-    const prod = productMap[code]
+  for (const key of Object.keys(productMap)) {
+    const prod = productMap[key]
     const salesList = prod.rows.map(r => {
       const opening = Number(r.opening_stock) || 0
       const purchased = Number(r.quantity_purchased) || 0
@@ -53,8 +55,9 @@ export function analyze(data, externalFactors) {
     const trendPct = trendFraction * 100
 
     productsSummary.push({
-      product_code: code,
+      product_code: prod.product_code,
       product_name: prod.product_name,
+      channel: prod.channel,
       avg_sales: avgSales,
       trend_pct: trendPct,
       trend_fraction: trendFraction,
@@ -66,18 +69,20 @@ export function analyze(data, externalFactors) {
   // No AI backend available on GitHub Pages — use neutral 1.0 multiplier
   const aiResult = {
     adjustment_factor: 1.0,
+    channel_adjustments: {},
     reasoning:
       'Running in static/offline mode. AI adjustment is unavailable without a backend. ' +
       'Using a neutral ×1.0 multiplier; recommendations are based solely on historical trends.',
     relevant_data_found: false,
   }
-  const adjustmentFactor = aiResult.adjustment_factor
+  const globalFactor = aiResult.adjustment_factor
 
   // Build final recommendations
   const resultProducts = productsSummary.map(ps => {
+    const adjustmentFactor = (aiResult.channel_adjustments || {})[ps.channel] ?? globalFactor
     const rawRec = ps.avg_sales * (1 + ps.trend_fraction) * adjustmentFactor * 1.1
     const recommendedPurchase = Math.ceil(Math.max(0, rawRec))
-    return {
+    const entry = {
       product_code: ps.product_code,
       product_name: ps.product_name,
       years: ps.years,
@@ -88,6 +93,8 @@ export function analyze(data, externalFactors) {
       recommended_purchase: recommendedPurchase,
       ai_reasoning: aiResult.reasoning,
     }
+    if (ps.channel) entry.sales_channel = ps.channel
+    return entry
   })
 
   return {
