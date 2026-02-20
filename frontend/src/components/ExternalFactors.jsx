@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import axios from 'axios'
+import { analyze } from '../planner'
 
 const EXAMPLE_FACTORS = [
   '❄️ Heavy snowfall expected in mountain resorts this season',
@@ -24,15 +24,14 @@ export default function ExternalFactors({ onNext, onBack, uploadedData, onResult
     setError(null)
     setLoading(true)
     try {
-      const res = await axios.post('/api/analyze', {
-        data: uploadedData,
-        external_factors: factors.trim() || 'No external factors provided.',
-      })
-      onResults(res.data)
+      const results = analyze(
+        uploadedData,
+        factors.trim() || 'No external factors provided.',
+      )
+      onResults(results)
       onNext()
     } catch (err) {
-      const msg = err.response?.data?.error || 'Analysis failed. Please try again.'
-      setError(msg)
+      setError(err.message || 'Analysis failed. Please try again.')
     } finally {
       setLoading(false)
     }

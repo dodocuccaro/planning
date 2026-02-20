@@ -12,6 +12,8 @@ dist/
 
 # Excel generated files
 *.xlsx
+# Allow the pre-built template shipped with the frontend
+!frontend/public/planning_template.xlsx
 
 # OS
 .DS_Store
