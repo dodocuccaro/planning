@@ -101,8 +101,8 @@ npm run dev
 
 The Flask backend needs to be running somewhere so the frontend can call it for AI analysis.
 
-> 💳 **Is Render free? Will it charge me?**
-> Render's free tier is **completely free and does not require a credit card**. You can sign up with just your GitHub or Google account. No billing information is needed to deploy this backend on the free tier.
+> 💳 **Will Render ask for a credit card or charge me?**
+> **No.** The free tier is completely free. Sign up with your GitHub or Google account — no credit card or billing information is required at any point.
 
 ### Using Render Blueprint (one-click, after merging)
 
@@ -118,6 +118,7 @@ Once the PR is merged into `main`:
 3. After the first deploy, go to the service's **Environment** tab and add:
    - `OPENAI_API_KEY` = your OpenAI key (starts with `sk-...`)
 4. Note the service URL shown on the Render dashboard, e.g. `https://planning-backend.onrender.com`.
+5. ➡️ **Now continue with the [Connecting the frontend](#connecting-the-frontend-same-for-both-options) steps below** to finish the setup.
 
 ### Alternative: Manual Web Service setup (works on any branch)
 
@@ -138,6 +139,7 @@ If you don't want to wait for a merge, you can also create the service manually:
    - `OPENAI_API_KEY` = your OpenAI key (starts with `sk-...`)
 6. Click **Create Web Service**. Render will build and deploy the backend.
 7. Note the service URL shown at the top of the Render dashboard, e.g. `https://planning-backend.onrender.com`.
+8. ➡️ **Now continue with the [Connecting the frontend](#connecting-the-frontend-same-for-both-options) steps below** to finish the setup.
 
 ---
 
