@@ -54,8 +54,17 @@ export default function ExternalFactors({ onNext, onBack, uploadedData, onResult
       <h2 className="card-title">External Factors</h2>
       <p className="card-subtitle">
         Tell us about any external conditions that might affect demand this season.
-        The AI will factor these into its purchase recommendations.
+        These will be factored into the purchase recommendations.
       </p>
+
+      <div className="alert alert-info" style={{ marginBottom: 16 }}>
+        <span className="alert-icon">🤖</span>
+        <div>
+          <strong>About AI in this tool:</strong> The analysis currently runs offline using historical trend calculations.
+          Full AI-powered recommendations are available when the app is deployed with its Python backend.
+          External factors you enter here are saved and ready for AI analysis when the backend is connected.
+        </div>
+      </div>
 
       <div className="chat-area">
         {/* AI assistant bubble */}
