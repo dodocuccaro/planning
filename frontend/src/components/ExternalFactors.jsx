@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { analyze } from '../planner'
 
+const BACKEND_URL = (import.meta.env.VITE_BACKEND_URL || '').replace(/\/$/, '')
+
 const EXAMPLE_FACTORS = [
   '❄️ Heavy snowfall expected in mountain resorts this season',
   '📈 Economic growth expected — higher consumer spending',
@@ -24,10 +26,22 @@ export default function ExternalFactors({ onNext, onBack, uploadedData, onResult
     setError(null)
     setLoading(true)
     try {
-      const results = analyze(
-        uploadedData,
-        factors.trim() || 'No external factors provided.',
-      )
+      const factorsText = factors.trim() || 'No external factors provided.'
+      let results
+      if (BACKEND_URL) {
+        const response = await fetch(`${BACKEND_URL}/api/analyze`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ data: uploadedData, external_factors: factorsText }),
+        })
+        if (!response.ok) {
+          const body = await response.json().catch(async () => ({ error: await response.text().catch(() => '') }))
+          throw new Error(body.error || `Backend error (${response.status})`)
+        }
+        results = await response.json()
+      } else {
+        results = analyze(uploadedData, factorsText)
+      }
       onResults(results)
       onNext()
     } catch (err) {
@@ -43,7 +57,9 @@ export default function ExternalFactors({ onNext, onBack, uploadedData, onResult
         <div className="analyzing-overlay">
           <div className="spinner" />
           <div className="analyzing-text">Analyzing your data…</div>
-          <div className="analyzing-sub">Running AI-powered demand analysis</div>
+          <div className="analyzing-sub">
+            {BACKEND_URL ? 'Running AI-powered demand analysis' : 'Running trend-based analysis'}
+          </div>
         </div>
       </div>
     )
@@ -57,14 +73,24 @@ export default function ExternalFactors({ onNext, onBack, uploadedData, onResult
         These will be factored into the purchase recommendations.
       </p>
 
-      <div className="alert alert-info" style={{ marginBottom: 16 }}>
-        <span className="alert-icon">🤖</span>
-        <div>
-          <strong>About AI in this tool:</strong> The analysis currently runs offline using historical trend calculations.
-          Full AI-powered recommendations are available when the app is deployed with its Python backend.
-          External factors you enter here are saved and ready for AI analysis when the backend is connected.
+      {BACKEND_URL ? (
+        <div className="alert alert-info" style={{ marginBottom: 16, borderColor: 'var(--green-500)', background: 'var(--green-100)', color: '#15803d' }}>
+          <span className="alert-icon">✅</span>
+          <div>
+            <strong>AI analysis active</strong> — your data will be analyzed by GPT-4o-mini, which will
+            correlate external factors with your historical sales to fine-tune recommendations.
+          </div>
         </div>
-      </div>
+      ) : (
+        <div className="alert alert-info" style={{ marginBottom: 16 }}>
+          <span className="alert-icon">🤖</span>
+          <div>
+            <strong>Running in offline mode:</strong> AI analysis is not connected.
+            Results use historical trend calculations only.
+            See the README to deploy the backend and enable full AI recommendations.
+          </div>
+        </div>
+      )}
 
       <div className="chat-area">
         {/* AI assistant bubble */}

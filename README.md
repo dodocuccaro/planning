@@ -89,9 +89,37 @@ npm run dev
 
 ## Environment Variables
 
-| Variable | Required | Description |
-|---|---|---|
-| `OPENAI_API_KEY` | Optional | OpenAI API key for AI-powered demand adjustment. Without it the tool still works — it uses a neutral ×1.0 multiplier. |
+| Variable | Where | Required | Description |
+|---|---|---|---|
+| `OPENAI_API_KEY` | Backend (Render) | Optional | OpenAI API key for AI-powered demand adjustment. Without it the tool still works — it uses a neutral ×1.0 multiplier. |
+| `VITE_BACKEND_URL` | GitHub repository variable | Optional | Full URL of the deployed backend (e.g. `https://planning-backend.onrender.com`). When set, the frontend sends analysis requests to the backend so GPT-4o-mini can process them. Without it the frontend runs in offline mode. |
+
+---
+
+## Deploying the Backend (Render.com — free tier)
+
+The repo includes a `render.yaml` file that lets you deploy the Flask backend to Render in a few clicks.
+
+### Steps
+
+1. **Sign up at [render.com](https://render.com)** (free account is enough).
+2. From the Render dashboard click **New → Blueprint** and connect this GitHub repository.
+   Render will detect `render.yaml` and create the `planning-backend` web service automatically.
+3. After the first deploy, go to the service's **Environment** tab and set:
+   - `OPENAI_API_KEY` = your OpenAI key (starts with `sk-...`)
+4. Note the service URL shown on the Render dashboard, e.g. `https://planning-backend.onrender.com`.
+
+### Connecting the frontend
+
+5. In your GitHub repository go to **Settings → Secrets and variables → Actions → Variables** (not Secrets).
+6. Create a repository variable:
+   - Name: `VITE_BACKEND_URL`
+   - Value: the Render service URL from step 4 (e.g. `https://planning-backend.onrender.com`)
+7. Re-run the **Deploy to GitHub Pages** workflow (or push any commit to `main`).
+
+The frontend will now call the backend for AI analysis. The ✅ **AI analysis active** banner will appear on the External Factors step when the connection is working.
+
+> **Note:** Render's free tier spins down services after 15 minutes of inactivity. The first request after a period of inactivity may take ~30 seconds while the service starts up. This is normal.
 
 ---
 

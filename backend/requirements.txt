@@ -5,3 +5,4 @@ openpyxl==3.1.5
 openai==1.61.0
 python-dotenv==1.0.1
 numpy==2.2.2
+gunicorn==22.0.0
