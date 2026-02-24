@@ -36,6 +36,7 @@ planning/
 │   ├── index.html
 │   ├── package.json
 │   └── vite.config.js
+├── render.yaml           # Render Blueprint (deploy backend in one click after merging to main)
 ├── .gitignore
 └── README.md
 ```
@@ -89,9 +90,67 @@ npm run dev
 
 ## Environment Variables
 
-| Variable | Required | Description |
-|---|---|---|
-| `OPENAI_API_KEY` | Optional | OpenAI API key for AI-powered demand adjustment. Without it the tool still works — it uses a neutral ×1.0 multiplier. |
+| Variable | Where | Required | Description |
+|---|---|---|---|
+| `OPENAI_API_KEY` | Backend (Render) | Optional | OpenAI API key for AI-powered demand adjustment. Without it the tool still works — it uses a neutral ×1.0 multiplier. |
+| `VITE_BACKEND_URL` | GitHub repository variable | Optional | Full URL of the deployed backend (e.g. `https://planning-backend.onrender.com`). When set, the frontend sends analysis requests to the backend so GPT-4o-mini can process them. Without it the frontend runs in offline mode. |
+
+---
+
+## Deploying the Backend (Render.com — free tier)
+
+The Flask backend needs to be running somewhere so the frontend can call it for AI analysis.
+
+### Using Render Blueprint (one-click, after merging)
+
+> ⚠️ **Blueprint requires `render.yaml` to be on the `main` branch.**
+> If you see "Blueprint file render.yaml not found on main branch", it means this PR has not been
+> merged yet. **Merge the PR first**, then come back to Render and try Blueprint again.
+
+Once the PR is merged into `main`:
+
+1. **Sign up at [render.com](https://render.com)** (free account is enough).
+2. From the Render dashboard click **New → Blueprint** and connect this GitHub repository.
+   Render will detect `render.yaml` on `main` and create the `planning-backend` web service automatically.
+3. After the first deploy, go to the service's **Environment** tab and add:
+   - `OPENAI_API_KEY` = your OpenAI key (starts with `sk-...`)
+4. Note the service URL shown on the Render dashboard, e.g. `https://planning-backend.onrender.com`.
+
+### Alternative: Manual Web Service setup (works on any branch)
+
+If you don't want to wait for a merge, you can also create the service manually:
+
+1. **Sign up at [render.com](https://render.com)** (free account is enough).
+2. From the Render dashboard click **New → Web Service**.
+3. Connect this GitHub repository and choose any branch.
+4. Fill in the service settings:
+   | Field | Value |
+   |---|---|
+   | **Name** | `planning-backend` (or any name you like) |
+   | **Root Directory** | `backend` |
+   | **Runtime** | `Python 3` |
+   | **Build Command** | `pip install -r requirements.txt` |
+   | **Start Command** | `gunicorn app:app` |
+5. Under **Environment Variables** add:
+   - `OPENAI_API_KEY` = your OpenAI key (starts with `sk-...`)
+6. Click **Create Web Service**. Render will build and deploy the backend.
+7. Note the service URL shown at the top of the Render dashboard, e.g. `https://planning-backend.onrender.com`.
+
+---
+
+### Connecting the frontend (same for both options)
+
+After the backend is deployed:
+
+4. In your GitHub repository go to **Settings → Secrets and variables → Actions → Variables** (not Secrets).
+5. Create a repository variable:
+   - Name: `VITE_BACKEND_URL`
+   - Value: the Render service URL from step 7 above (e.g. `https://planning-backend.onrender.com`)
+6. Re-run the **Deploy to GitHub Pages** workflow (or push any commit to `main`).
+
+The frontend will now call the backend for AI analysis. The ✅ **AI analysis active** banner will appear on the External Factors step when the connection is working.
+
+> **Note:** Render's free tier spins down services after 15 minutes of inactivity. The first request after a period of inactivity may take ~30 seconds while the service starts up. This is normal.
 
 ---
 

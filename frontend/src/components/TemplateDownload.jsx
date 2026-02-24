@@ -67,7 +67,8 @@ export default function TemplateDownload({ onNext }) {
           Download Excel Template
         </button>
         <button className="btn btn-secondary btn-large" onClick={onNext}>
-          Continue →
+          <span className="btn-icon">📤</span>
+          Upload Your Data →
         </button>
       </div>
     </div>
