@@ -100,17 +100,29 @@ npm run dev
 ## Deploying the Backend (Render.com — free tier)
 
 The Flask backend needs to be running somewhere so the frontend can call it for AI analysis.
-Follow the steps below to deploy it to Render for free.
 
-> **Note:** If you got a "render.yaml not found on main branch" error, that is because `render.yaml`
-> is part of this PR and is not on `main` yet. Use the **manual setup** instructions below — they
-> work immediately without needing to merge first.
+### Using Render Blueprint (one-click, after merging)
 
-### Option A — Manual setup (recommended, works right now)
+> ⚠️ **Blueprint requires `render.yaml` to be on the `main` branch.**
+> If you see "Blueprint file render.yaml not found on main branch", it means this PR has not been
+> merged yet. **Merge the PR first**, then come back to Render and try Blueprint again.
+
+Once the PR is merged into `main`:
+
+1. **Sign up at [render.com](https://render.com)** (free account is enough).
+2. From the Render dashboard click **New → Blueprint** and connect this GitHub repository.
+   Render will detect `render.yaml` on `main` and create the `planning-backend` web service automatically.
+3. After the first deploy, go to the service's **Environment** tab and add:
+   - `OPENAI_API_KEY` = your OpenAI key (starts with `sk-...`)
+4. Note the service URL shown on the Render dashboard, e.g. `https://planning-backend.onrender.com`.
+
+### Alternative: Manual Web Service setup (works on any branch)
+
+If you don't want to wait for a merge, you can also create the service manually:
 
 1. **Sign up at [render.com](https://render.com)** (free account is enough).
 2. From the Render dashboard click **New → Web Service**.
-3. Connect this GitHub repository and choose the branch you want to deploy from.
+3. Connect this GitHub repository and choose any branch.
 4. Fill in the service settings:
    | Field | Value |
    |---|---|
@@ -123,15 +135,6 @@ Follow the steps below to deploy it to Render for free.
    - `OPENAI_API_KEY` = your OpenAI key (starts with `sk-...`)
 6. Click **Create Web Service**. Render will build and deploy the backend.
 7. Note the service URL shown at the top of the Render dashboard, e.g. `https://planning-backend.onrender.com`.
-
-### Option B — Blueprint (after this PR is merged into main)
-
-Once this PR is merged, you can also use Render's one-click Blueprint:
-
-1. From the Render dashboard click **New → Blueprint** and connect this GitHub repository.
-   Render will detect `render.yaml` on `main` and create the `planning-backend` web service automatically.
-2. After the first deploy, go to the service's **Environment** tab and add `OPENAI_API_KEY`.
-3. Note the service URL.
 
 ---
 
