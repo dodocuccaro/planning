@@ -101,6 +101,9 @@ npm run dev
 
 The Flask backend needs to be running somewhere so the frontend can call it for AI analysis.
 
+> 💳 **Will Render ask for a credit card or charge me?**
+> **No.** The free tier is completely free. Sign up with your GitHub or Google account — no credit card or billing information is required at any point.
+
 ### Using Render Blueprint (one-click, after merging)
 
 > ⚠️ **Blueprint requires `render.yaml` to be on the `main` branch.**
@@ -109,12 +112,13 @@ The Flask backend needs to be running somewhere so the frontend can call it for 
 
 Once the PR is merged into `main`:
 
-1. **Sign up at [render.com](https://render.com)** (free account is enough).
+1. **Sign up at [render.com](https://render.com)** (free account is enough — no credit card required).
 2. From the Render dashboard click **New → Blueprint** and connect this GitHub repository.
    Render will detect `render.yaml` on `main` and create the `planning-backend` web service automatically.
 3. After the first deploy, go to the service's **Environment** tab and add:
    - `OPENAI_API_KEY` = your OpenAI key (starts with `sk-...`)
 4. Note the service URL shown on the Render dashboard, e.g. `https://planning-backend.onrender.com`.
+5. ➡️ **Now continue with the [Connecting the frontend](#connecting-the-frontend-same-for-both-options) steps below** to finish the setup.
 
 ### Alternative: Manual Web Service setup (works on any branch)
 
@@ -135,6 +139,7 @@ If you don't want to wait for a merge, you can also create the service manually:
    - `OPENAI_API_KEY` = your OpenAI key (starts with `sk-...`)
 6. Click **Create Web Service**. Render will build and deploy the backend.
 7. Note the service URL shown at the top of the Render dashboard, e.g. `https://planning-backend.onrender.com`.
+8. ➡️ **Now continue with the [Connecting the frontend](#connecting-the-frontend-same-for-both-options) steps below** to finish the setup.
 
 ---
 
@@ -142,11 +147,11 @@ If you don't want to wait for a merge, you can also create the service manually:
 
 After the backend is deployed:
 
-4. In your GitHub repository go to **Settings → Secrets and variables → Actions → Variables** (not Secrets).
-5. Create a repository variable:
+1. In your GitHub repository go to **Settings → Secrets and variables → Actions → Variables** (not Secrets).
+2. Create a repository variable:
    - Name: `VITE_BACKEND_URL`
-   - Value: the Render service URL from step 7 above (e.g. `https://planning-backend.onrender.com`)
-6. Re-run the **Deploy to GitHub Pages** workflow (or push any commit to `main`).
+   - Value: the Render service URL from the previous section (e.g. `https://planning-backend.onrender.com`)
+3. Re-run the **Deploy to GitHub Pages** workflow (or push any commit to `main`).
 
 The frontend will now call the backend for AI analysis. The ✅ **AI analysis active** banner will appear on the External Factors step when the connection is working.
 
