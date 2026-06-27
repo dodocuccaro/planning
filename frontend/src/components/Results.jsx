@@ -3,7 +3,7 @@ import {
 } from 'recharts'
 
 function TrendBadge({ trendPct }) {
-  const cls = trendPct > 0 ? 'trend-positive' : trendPct < 0 ? 'trend-negative' : 'trend-neutral'
+  const cls   = trendPct > 0 ? 'trend-positive' : trendPct < 0 ? 'trend-negative' : 'trend-neutral'
   const arrow = trendPct > 0 ? '↑' : trendPct < 0 ? '↓' : '→'
   return (
     <span className={`metric-value ${cls}`}>
@@ -13,13 +13,13 @@ function TrendBadge({ trendPct }) {
 }
 
 function AdjustmentBadge({ factor }) {
-  const pct = ((factor - 1) * 100).toFixed(0)
-  const cls = factor > 1 ? 'adjustment-positive' : factor < 1 ? 'adjustment-negative' : 'adjustment-neutral'
+  const pct   = ((factor - 1) * 100).toFixed(0)
+  const cls   = factor > 1 ? 'adjustment-positive' : factor < 1 ? 'adjustment-negative' : 'adjustment-neutral'
   const label = factor > 1 ? `+${pct}%` : factor < 1 ? `${pct}%` : 'Neutral'
   return <span className={`adjustment-badge ${cls}`}>{label} AI adjustment</span>
 }
 
-const CHART_COLORS = ['#4aa3e8', '#2589d4', '#1d6daa', '#1a4d7c']
+const CHART_COLORS = ['#4aa3e8', '#2589d4', '#1d6daa', '#1a4d7c', '#12345a']
 
 function SalesChart({ years, sales }) {
   const data = years.map((yr, i) => ({ year: String(yr), sales: sales[i] }))
@@ -45,8 +45,12 @@ function SalesChart({ years, sales }) {
 
 function ProductCard({ product }) {
   const {
-    product_code, product_name, sales_channel, years, historical_sales,
-    avg_sales, trend_pct, adjustment_factor, recommended_purchase, ai_reasoning,
+    product_code, product_name, sales_channel,
+    years, historical_sales,
+    last_year_sales, avg_sales, current_stock,
+    trend_pct, adjustment_factor,
+    forecast_demand, safety_stock, target_stock, recommended_purchase,
+    ai_reasoning,
   } = product
 
   return (
@@ -59,10 +63,27 @@ function ProductCard({ product }) {
             {sales_channel ? <span className="channel-badge">🏪 {sales_channel}</span> : null}
           </div>
         </div>
-        <div className="product-rec">
-          <div className="rec-label">Recommended Order</div>
-          <div className="rec-value">{recommended_purchase.toLocaleString()}</div>
-          <div className="rec-unit">units</div>
+        {/* Three key output fields */}
+        <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+          <div className="product-rec" style={{ minWidth: 110 }}>
+            <div className="rec-label">Last Year Sales</div>
+            <div className="rec-value" style={{ fontSize: '1.5rem', color: 'var(--gray-700)' }}>
+              {Number(last_year_sales).toLocaleString()}
+            </div>
+            <div className="rec-unit">units sold</div>
+          </div>
+          <div className="product-rec" style={{ minWidth: 110 }}>
+            <div className="rec-label">Current Stock</div>
+            <div className="rec-value" style={{ fontSize: '1.5rem', color: 'var(--amber-600, #d97706)' }}>
+              {Number(current_stock).toLocaleString()}
+            </div>
+            <div className="rec-unit">units in stock</div>
+          </div>
+          <div className="product-rec" style={{ minWidth: 110 }}>
+            <div className="rec-label">Recommended Order</div>
+            <div className="rec-value">{Number(recommended_purchase).toLocaleString()}</div>
+            <div className="rec-unit">units to buy</div>
+          </div>
         </div>
       </div>
 
@@ -77,7 +98,9 @@ function ProductCard({ product }) {
         <div className="metrics-panel">
           <div className="metric-item">
             <div className="metric-label">Avg Annual Sales</div>
-            <div className="metric-value">{avg_sales.toLocaleString(undefined, { maximumFractionDigits: 0 })}</div>
+            <div className="metric-value">
+              {Number(avg_sales).toLocaleString(undefined, { maximumFractionDigits: 0 })}
+            </div>
           </div>
           <div className="metric-item">
             <div className="metric-label">Sales Trend</div>
@@ -88,8 +111,22 @@ function ProductCard({ product }) {
             <AdjustmentBadge factor={adjustment_factor} />
           </div>
           <div className="metric-item">
-            <div className="metric-label">Safety Buffer</div>
-            <span className="metric-value" style={{ color: 'var(--amber-500)' }}>+10%</span>
+            <div className="metric-label">Forecast Demand</div>
+            <span className="metric-value">
+              {Number(forecast_demand ?? 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}
+            </span>
+          </div>
+          <div className="metric-item">
+            <div className="metric-label">Safety Stock</div>
+            <span className="metric-value" style={{ color: 'var(--amber-500)' }}>
+              +{Number(safety_stock ?? 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}
+            </span>
+          </div>
+          <div className="metric-item">
+            <div className="metric-label">Target Stock</div>
+            <span className="metric-value">
+              {Number(target_stock ?? 0).toLocaleString(undefined, { maximumFractionDigits: 0 })}
+            </span>
           </div>
         </div>
 
@@ -122,7 +159,8 @@ export default function Results({ results, onBack, onRestart }) {
 
   const { products, ai_adjustment, external_factors } = results
   const totalRecommended = products.reduce((sum, p) => sum + p.recommended_purchase, 0)
-  const aiActive = ai_adjustment?.relevant_data_found
+  const totalCurrentStock = products.reduce((sum, p) => sum + (p.current_stock || 0), 0)
+  const aiActive         = ai_adjustment?.relevant_data_found
 
   return (
     <div>
@@ -130,7 +168,8 @@ export default function Results({ results, onBack, onRestart }) {
       <div className="card" style={{ marginBottom: 24 }}>
         <h2 className="card-title">Purchase Recommendations</h2>
         <p className="card-subtitle" style={{ marginBottom: 20 }}>
-          Based on your historical data{external_factors && external_factors !== 'No external factors provided.' ? ' and the external factors you described' : ''}.
+          Based on your historical data{external_factors && external_factors !== 'No external factors provided.'
+            ? ' and the external factors you described' : ''}.
         </p>
 
         <div className="results-summary">
@@ -139,11 +178,16 @@ export default function Results({ results, onBack, onRestart }) {
             <div className="summary-label">Products Analyzed</div>
           </div>
           <div className="summary-card">
+            <div className="big-number">{totalCurrentStock.toLocaleString()}</div>
+            <div className="summary-label">Total Current Stock</div>
+          </div>
+          <div className="summary-card">
             <div className="big-number">{totalRecommended.toLocaleString()}</div>
             <div className="summary-label">Total Units to Order</div>
           </div>
           <div className="summary-card">
-            <div className="big-number" style={{ color: aiActive ? 'var(--green-500)' : 'var(--gray-500)', fontSize: '1.4rem' }}>
+            <div className="big-number"
+              style={{ color: aiActive ? 'var(--green-500)' : 'var(--gray-500)', fontSize: '1.4rem' }}>
               {aiActive ? '✓ Active' : '○ Off'}
             </div>
             <div className="summary-label">AI Adjustment</div>
@@ -158,7 +202,6 @@ export default function Results({ results, onBack, onRestart }) {
           </div>
         </div>
 
-        {/* External factors echo */}
         {external_factors && external_factors !== 'No external factors provided.' && (
           <div className="alert alert-info" style={{ marginBottom: 0 }}>
             <span className="alert-icon">🌍</span>

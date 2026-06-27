@@ -55,10 +55,13 @@ export default function TemplateDownload({ onNext }) {
       <div className="columns-preview">
         <h3>Required columns</h3>
         <div className="columns-tags">
-          {['Product Code', 'Product Name', 'Year', 'Opening Stock', 'Quantity Purchased', 'Closing Stock'].map(col => (
+          {['Product Code', 'Product Name', 'Current Stock', 'Opening Stock YYYY', 'Qty Purchased YYYY', 'Closing Stock YYYY'].map(col => (
             <span key={col} className="tag">{col}</span>
           ))}
         </div>
+        <p style={{ fontSize: '.82rem', color: 'var(--gray-500)', marginTop: 8 }}>
+          Minimum 3 years required. Optional: Category, Supplier, Sales Channel, Currency (EUR/USD/GBP/CHF), Unit of Measure, Unit Cost.
+        </p>
       </div>
 
       <div className="btn-row" style={{ justifyContent: 'center', marginTop: '28px' }}>

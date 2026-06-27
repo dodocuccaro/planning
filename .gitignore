@@ -18,3 +18,7 @@ dist/
 # OS
 .DS_Store
 *.swp
+
+# Runtime / local
+backend/users.db
+.claude/
