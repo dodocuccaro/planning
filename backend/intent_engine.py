@@ -62,7 +62,7 @@ RULES:
 6. Price ranges: parse strictly. "fascia 20-50€", "tra 20 e 50", "sotto i 30€", "sopra 100" → price_min/price_max as floats. If present but unparseable → needs_clarification=true, clarification_type="price_unparseable".
 7. "years": extract from "ultimi N anni" (compute from available_years), "dal YYYY", "YYYY-YYYY", explicit years. null = all available.
 8. "groupby": detect from "per colore", "per taglia", "per canale", "per fornitore", "per categoria", "per brand", "per marchio", "per marca". Map "brand"/"marchio"/"marca"/"fornitore" → "supplier_name".
-9. "recommendation_filter": detect when user wants only products to skip/avoid buying ("non devo comprare", "non debba comprare", "evitare", "non ordinare", "sconsigliati", "should not buy", "avoid") → "skip". When user wants only recommended products → "buy". Otherwise → "all".
+9. "recommendation_filter": detect when user wants only products to STOP buying or avoid ("smettere di comprare", "smettere di ordinare", "non devo comprare", "non dovrei comprare", "non comprare più", "evitare", "tagliare", "eliminare", "interrompere", "non ordinare", "sconsigliati", "should not buy", "stop buying", "avoid") → "skip". When user wants only recommended products → "buy". Otherwise → "all".
 10. Respond in the same language as the user (Italian or English).
 
 INTENT TYPES:
@@ -275,9 +275,14 @@ def _extract_groupby(message: str):
 
 
 _SKIP_WORDS = [
+    "smettere di comprare", "smettere di ordinare", "smettere di acquistare",
     "non devo comprare", "non debba comprare", "non dovrei comprare",
-    "non ordinare", "non comprare", "evitare", "sconsigliati", "sconsigliato",
-    "should not buy", "avoid", "not buy", "skip",
+    "non comprare più", "non ordinare più", "non acquistare più",
+    "non ordinare", "non comprare", "non acquistare",
+    "evitare", "sconsigliati", "sconsigliato", "da evitare",
+    "tagliare", "eliminare", "interrompere", "sospendere", "discontinuare",
+    "non rinnovare", "non riordinare",
+    "should not buy", "stop buying", "avoid", "not buy", "skip",
 ]
 
 _BUY_WORDS = [
