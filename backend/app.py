@@ -4,6 +4,8 @@ import uuid
 from datetime import datetime
 
 import pandas as pd
+import openpyxl
+from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from flask import Flask, jsonify, request, g, send_file
 from flask_cors import CORS
 from dotenv import load_dotenv
@@ -16,6 +18,84 @@ import query_engine
 import response_builder
 
 load_dotenv()
+
+# ── Excel template definition ─────────────────────────────────────────────────
+
+_TEMPLATE_COLUMNS = [
+    "Product Code", "Product Name", "Year",
+    "Opening Stock", "Quantity Purchased", "Closing Stock", "Sales Channel",
+]
+
+_SAMPLE_DATA = [
+    {"Product Code": "SKI-JKT-001", "Product Name": "Ski Jacket Pro",    "Sales Channel": "Main Store", "Year": 2022, "Opening Stock": 50,  "Quantity Purchased": 300, "Closing Stock": 40},
+    {"Product Code": "SKI-JKT-001", "Product Name": "Ski Jacket Pro",    "Sales Channel": "Main Store", "Year": 2023, "Opening Stock": 40,  "Quantity Purchased": 320, "Closing Stock": 35},
+    {"Product Code": "SKI-JKT-001", "Product Name": "Ski Jacket Pro",    "Sales Channel": "Main Store", "Year": 2024, "Opening Stock": 35,  "Quantity Purchased": 350, "Closing Stock": 30},
+    {"Product Code": "SKI-JKT-001", "Product Name": "Ski Jacket Pro",    "Sales Channel": "Online",     "Year": 2022, "Opening Stock": 10,  "Quantity Purchased":  80, "Closing Stock":  8},
+    {"Product Code": "SKI-JKT-001", "Product Name": "Ski Jacket Pro",    "Sales Channel": "Online",     "Year": 2023, "Opening Stock":  8,  "Quantity Purchased": 100, "Closing Stock":  6},
+    {"Product Code": "SKI-JKT-001", "Product Name": "Ski Jacket Pro",    "Sales Channel": "Online",     "Year": 2024, "Opening Stock":  6,  "Quantity Purchased": 130, "Closing Stock":  5},
+    {"Product Code": "SKI-BT-002",  "Product Name": "Alpine Ski Boots",  "Sales Channel": "Main Store", "Year": 2022, "Opening Stock": 80,  "Quantity Purchased": 200, "Closing Stock": 60},
+    {"Product Code": "SKI-BT-002",  "Product Name": "Alpine Ski Boots",  "Sales Channel": "Main Store", "Year": 2023, "Opening Stock": 60,  "Quantity Purchased": 210, "Closing Stock": 50},
+    {"Product Code": "SKI-BT-002",  "Product Name": "Alpine Ski Boots",  "Sales Channel": "Main Store", "Year": 2024, "Opening Stock": 50,  "Quantity Purchased": 230, "Closing Stock": 45},
+    {"Product Code": "GLOVES-003",  "Product Name": "Thermal Gloves",    "Sales Channel": "Main Store", "Year": 2022, "Opening Stock": 120, "Quantity Purchased": 500, "Closing Stock": 80},
+    {"Product Code": "GLOVES-003",  "Product Name": "Thermal Gloves",    "Sales Channel": "Main Store", "Year": 2023, "Opening Stock": 80,  "Quantity Purchased": 540, "Closing Stock": 70},
+    {"Product Code": "GLOVES-003",  "Product Name": "Thermal Gloves",    "Sales Channel": "Main Store", "Year": 2024, "Opening Stock": 70,  "Quantity Purchased": 580, "Closing Stock": 60},
+]
+
+
+def _build_template_excel() -> bytes:
+    """Generate and return the Excel planning template as bytes."""
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Planning Template"
+
+    header_font = Font(bold=True, color="FFFFFF", size=11)
+    header_fill = PatternFill("solid", fgColor="1E3A5F")
+    example_fill = PatternFill("solid", fgColor="EBF3FB")
+    center = Alignment(horizontal="center", vertical="center")
+    thin = Side(style="thin", color="CCCCCC")
+    border = Border(left=thin, right=thin, top=thin, bottom=thin)
+    col_widths = [18, 22, 8, 16, 20, 16, 18]
+
+    for col_idx, (col_name, width) in enumerate(zip(_TEMPLATE_COLUMNS, col_widths), start=1):
+        cell = ws.cell(row=1, column=col_idx, value=col_name)
+        cell.font = header_font
+        cell.fill = header_fill
+        cell.alignment = center
+        cell.border = border
+        ws.column_dimensions[openpyxl.utils.get_column_letter(col_idx)].width = width
+    ws.row_dimensions[1].height = 28
+
+    for row_idx, row_data in enumerate(_SAMPLE_DATA, start=2):
+        for col_idx, col_name in enumerate(_TEMPLATE_COLUMNS, start=1):
+            cell = ws.cell(row=row_idx, column=col_idx, value=row_data.get(col_name, ""))
+            cell.fill = example_fill
+            cell.border = border
+            cell.alignment = center
+
+    ws_info = wb.create_sheet("Instructions")
+    ws_info.column_dimensions["A"].width = 80
+    instructions = [
+        ("Planning Tool — Excel Template Instructions", True),
+        ("", False),
+        ("1. Do NOT rename or remove any column headers in the 'Planning Template' sheet.", False),
+        ("2. Delete the example rows (rows 2 onwards) and enter your own data.", False),
+        ("3. Each row = ONE product, ONE year, ONE sales channel (optional).", False),
+        ("4. Required columns: Product Code, Product Name, Year, Opening Stock, Quantity Purchased, Closing Stock.", False),
+        ("5. Optional: Sales Channel — leave blank if you have only one channel.", False),
+        ("6. Sales = Opening Stock + Quantity Purchased − Closing Stock.", False),
+        ("7. Include at least 2-3 years of data per product for better forecasts.", False),
+    ]
+    for r_idx, (text, bold) in enumerate(instructions, start=1):
+        cell = ws_info.cell(row=r_idx, column=1, value=text)
+        if bold:
+            cell.font = Font(bold=True, size=13)
+        ws_info.row_dimensions[r_idx].height = 18
+
+    buf = io.BytesIO()
+    wb.save(buf)
+    buf.seek(0)
+    return buf.read()
+
 
 app = Flask(__name__)
 CORS(app)
