@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import axios from 'axios'
 import { useAuth } from '../hooks/useAuth'
-import UploadPrompt from '../components/UploadPrompt'
+import DataSourcePicker from '../components/DataSourcePicker'
 import ColumnMappingConfirm from '../components/ColumnMappingConfirm'
 import ChatMessage from '../components/ChatMessage'
 import ChatInput from '../components/ChatInput'
@@ -142,9 +142,9 @@ export default function ChatPage() {
       <div className="chat-body">
         {uploadState === 'idle' && (
           <div className="chat-center">
-            <h2>Carica i dati del tuo gestionale</h2>
-            <p>Carica un file Excel con almeno 3 anni di dati storici. Qualsiasi formato è accettato — il sistema rileva automaticamente le colonne.</p>
-            <UploadPrompt onParsed={handleParsed} />
+            <h2>Da dove vuoi importare i dati?</h2>
+            <p>Scegli come collegare i dati del tuo magazzino all'assistente di pianificazione.</p>
+            <DataSourcePicker onParsed={handleParsed} />
           </div>
         )}
 
